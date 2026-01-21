@@ -1,0 +1,595 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>多空止盈价</title>
+
+  <style>
+    :root{
+      --wm-opacity: 0.03;
+      --wm-right: 10px;
+      --wm-bottom: 8px;
+
+      /* 桌面三格：买入价=利润；杠杆不变 */
+      --col-entry: 1.20fr;
+      --col-lev:   0.80fr;
+      --col-profit:1.20fr;
+
+      --in-font-base: 28;
+      --in-font-min:  14;
+    }
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      background:#ffffff;
+      font-family: "Times New Roman","Songti SC","SimSun",serif;
+      color:#000;
+    }
+
+    .page{
+      width: min(1500px, 98vw);
+      margin: 16px auto;
+      background:#fff;
+    }
+
+    .row{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 80px;
+      align-items:start;
+      padding: 0 24px;
+    }
+
+    .panel{
+      position: relative;
+      background:#e9e9e9;
+      padding: 18px 22px 28px;
+      min-height: 520px;
+    }
+
+    .top{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom: 10px;
+    }
+
+    .tag{
+      width: 120px;
+      height: 44px;
+      background:#f7f7f7;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size: 26px;
+    }
+
+    .codeBox{
+      display:flex;
+      align-items:center;
+      gap: 18px;
+      font-size: 26px;
+      width: 380px;
+      justify-content:flex-end;
+    }
+    .codeLabel{ white-space:nowrap; }
+
+    .codeInput{
+      width: 240px;
+      height: 44px;
+      background:#f7f7f7;
+      border: 0;
+      outline: none;
+      text-align:center;
+      font-size: 26px;
+      font-family: inherit;
+      padding: 0 10px;
+      text-transform: uppercase;
+      caret-color:#000;
+    }
+
+    .bar{ height: 14px; width: 100%; margin: 8px 0 10px; }
+
+    .digitsRow{
+      display:flex;
+      justify-content:flex-end;
+      align-items:center;
+      gap: 12px;
+      margin: 0 0 10px;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+      font-size: 12px;
+      color: rgba(0,0,0,.65);
+    }
+    .digitsRow select{
+      height: 28px;
+      border: 1px solid rgba(0,0,0,.35);
+      background:#f7f7f7;
+      border-radius: 6px;
+      padding: 0 8px;
+      outline: none;
+      font-size: 12px;
+    }
+
+    .headRow{
+      display:grid;
+      grid-template-columns: 1.15fr 0.8fr 0.9fr 0.9fr 0.9fr;
+      column-gap: 34px;
+      align-items:end;
+      font-size: 26px;
+      margin-bottom: 10px;
+    }
+    .headRow div{ white-space:nowrap; }
+
+    .inputRow{
+      display:grid;
+      grid-template-columns: 1.15fr 0.8fr 0.9fr 0.9fr 0.9fr;
+      column-gap: 34px;
+      align-items:center;
+    }
+
+    .triple{
+      grid-column: 1 / 4;
+      display:grid;
+      grid-template-columns: var(--col-entry) var(--col-lev) var(--col-profit);
+      background:#efefef;
+      border: 1px solid rgba(0,0,0,0.22);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.35);
+      height: 54px;
+    }
+    .triple .cell{
+      position:relative;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .triple .cell:not(:first-child){
+      border-left: 1px solid rgba(0,0,0,0.22);
+    }
+
+    input{
+      font-weight: 400;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: geometricPrecision;
+      caret-color:#000;
+    }
+
+    .triple input{
+      width: 100%;
+      height: 100%;
+      border: 0;
+      outline:none;
+      background: rgba(255,255,255,0.25);
+      font-size: calc(var(--in-font-base) * 1px);
+      padding: 0 18px;
+      font-family: inherit;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      transform: translateZ(0);
+      backface-visibility: hidden;
+    }
+
+    /* ✅ 杠杆框：聚焦左对齐，失焦回居中（修复光标粗） */
+    .triple input.caret-fix-on:focus{ text-align:left; padding-left: 18px; }
+    .triple input.caret-fix-on:not(:focus){ text-align:center; }
+
+    .pctWrap{ position:relative; width:100%; height:100%; }
+    .pctWrap input{ padding-right: 44px; }
+    .pctSuffix{
+      position:absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 26px;
+      pointer-events:none;
+      user-select:none;
+    }
+
+    .out{
+      font-size: 30px;
+      height: 54px;
+      display:flex;
+      align-items:center;
+      justify-content:flex-start;
+    }
+
+    .table{
+      margin-top: 32px;
+      display:grid;
+      grid-template-columns: 90px 180px;
+      row-gap: 18px;
+      column-gap: 80px;
+      justify-content:center;
+      align-items:center;
+      font-size: 30px;
+    }
+    .k{ text-align:center; }
+    .v{ text-align:center; }
+
+    .watermark{
+      position:absolute;
+      right: var(--wm-right);
+      bottom: var(--wm-bottom);
+      font-size: 38px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      opacity: var(--wm-opacity);
+      color:#000;
+      pointer-events:none;
+      user-select:none;
+      text-shadow: 0 0 1px rgba(0,0,0,0.35);
+    }
+
+    /* ========== 手机端（按你要的：止盈价右侧输出，列表不要） ========== */
+    .mobileTPRow{ display:none; }
+
+    @media (max-width: 980px){
+      .page{ width:100%; margin:0; }
+      .row{
+        grid-template-columns: 1fr;
+        gap: 18px;
+        padding: 14px 14px 22px;
+      }
+      .panel{ padding: 14px 14px 18px; min-height:auto; }
+
+      .tag{ width: 92px; height: 40px; font-size: 22px; }
+      .codeBox{ width:auto; gap: 10px; font-size: 20px; justify-content:flex-start; }
+      .codeInput{ width: 170px; height: 40px; font-size: 20px; }
+
+      .bar{ height: 12px; margin: 8px 0 10px; }
+      .digitsRow{ justify-content:flex-start; margin: 0 0 12px; }
+
+      .headRow{
+        grid-template-columns: 1fr 0.85fr 1fr;
+        column-gap: 16px;
+        font-size: 22px;
+        margin-bottom: 8px;
+      }
+      .headRow .deskOnly{ display:none; }
+
+      .inputRow{
+        grid-template-columns: 1fr;
+        row-gap: 12px;
+      }
+
+      /* 手机端隐藏桌面两列输出 */
+      #long_norm, #long_tp, #short_norm, #short_tp{ display:none; }
+
+      .triple{ grid-column:auto; height: 52px; }
+      .triple input{ font-size: 22px; padding: 0 12px; }
+      .pctSuffix{ font-size: 20px; right: 10px; }
+      .pctWrap input{ padding-right: 34px; }
+
+      /* ✅ 手机：止盈价一行：左标题 右数值 */
+      .mobileTPRow{
+        display:grid;
+        grid-template-columns: auto 1fr;
+        align-items:end;
+        column-gap: 18px;
+        margin-top: 10px;
+        margin-bottom: 6px;
+      }
+      .mobileTPTitle{
+        font-size: 44px;
+        font-weight: 700;
+        line-height: 1;
+      }
+      .mobileTPValue{
+        font-size: 34px;
+        line-height: 1.1;
+        text-align:left;
+      }
+
+      /* ✅ 手机端隐藏列表 */
+      .table{ display:none; }
+
+      .watermark{ font-size: 26px; right: 8px; bottom: 6px; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page">
+    <div class="row">
+
+      <!-- 多单 -->
+      <section class="panel">
+        <div class="top">
+          <div class="tag">多单</div>
+          <div class="codeBox">
+            <div class="codeLabel">代码：</div>
+            <input class="codeInput" id="long_code" value="" autocomplete="off">
+          </div>
+        </div>
+        <div class="bar" style="background:#76c043;"></div>
+
+        <div class="digitsRow">
+          <span>止盈价小数位：</span>
+          <select id="digits_long">
+            <option value="2">2</option>
+            <option value="3" selected>3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+          </select>
+        </div>
+
+        <div class="headRow">
+          <div>多单买入价</div>
+          <div>杠杆/倍</div>
+          <div>利润%</div>
+          <div class="deskOnly">正常利润</div>
+          <div class="deskOnly">止盈价</div>
+        </div>
+
+        <div class="inputRow">
+          <div class="triple">
+            <div class="cell"><input id="long_entry" value="" autocomplete="off"></div>
+            <div class="cell"><input id="long_lev" class="caret-fix-on" value="" autocomplete="off"></div>
+            <div class="cell">
+              <div class="pctWrap">
+                <input id="long_profit" value="" autocomplete="off">
+                <span class="pctSuffix">%</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 桌面输出 -->
+          <div class="out" id="long_norm">—</div>
+          <div class="out" id="long_tp">—</div>
+        </div>
+
+        <!-- 手机输出（标题左，数值右） -->
+        <div class="mobileTPRow">
+          <div class="mobileTPTitle">止盈价</div>
+          <div class="mobileTPValue" id="long_tp_mobile">—</div>
+        </div>
+
+        <div class="table" id="long_table"></div>
+        <div class="watermark">Lee奇</div>
+      </section>
+
+      <!-- 空单 -->
+      <section class="panel">
+        <div class="top">
+          <div class="tag">空单</div>
+          <div class="codeBox">
+            <div class="codeLabel">代码：</div>
+            <input class="codeInput" id="short_code" value="" autocomplete="off">
+          </div>
+        </div>
+        <div class="bar" style="background:#ff1e1e;"></div>
+
+        <div class="digitsRow">
+          <span>止盈价小数位：</span>
+          <select id="digits_short">
+            <option value="2">2</option>
+            <option value="3" selected>3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+          </select>
+        </div>
+
+        <div class="headRow">
+          <div>空单买入价</div>
+          <div>杠杆/倍</div>
+          <div>利润%</div>
+          <div class="deskOnly">正常利润</div>
+          <div class="deskOnly">止盈价</div>
+        </div>
+
+        <div class="inputRow">
+          <div class="triple">
+            <div class="cell"><input id="short_entry" value="" autocomplete="off"></div>
+            <div class="cell"><input id="short_lev" class="caret-fix-on" value="" autocomplete="off"></div>
+            <div class="cell">
+              <div class="pctWrap">
+                <input id="short_profit" value="" autocomplete="off">
+                <span class="pctSuffix">%</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="out" id="short_norm">—</div>
+          <div class="out" id="short_tp">—</div>
+        </div>
+
+        <div class="mobileTPRow">
+          <div class="mobileTPTitle">止盈价</div>
+          <div class="mobileTPValue" id="short_tp_mobile">—</div>
+        </div>
+
+        <div class="table" id="short_table"></div>
+        <div class="watermark">Lee奇</div>
+      </section>
+
+    </div>
+  </div>
+
+  <script>
+    // ===== 稳定版：永远计算并更新（不依赖 matchMedia） =====
+    const LEV_LIST = [1, 5, 10, 20, 50, 100];
+
+    // 系统小数点
+    const DECIMAL_SEP = (() => {
+      try{
+        const s = new Intl.NumberFormat().format(1.1);
+        const m = s.match(/1([^0-9])1/);
+        return m ? m[1] : ".";
+      } catch { return "."; }
+    })();
+
+    let DIGITS_LONG = 3;
+    let DIGITS_SHORT = 3;
+
+    function formatNumber(n, digits){
+      if (!Number.isFinite(n)) return "—";
+      const s = n.toFixed(digits);
+      return (DECIMAL_SEP === ".") ? s : s.replace(".", DECIMAL_SEP);
+    }
+
+    function parseNum(v){
+      v = String(v ?? "");
+      // 去掉不可见字符（iOS 很常见）
+      v = v.replace(/[\u200B-\u200D\uFEFF]/g, "");
+      v = v.trim();
+      if (!v) return NaN;
+
+      // 允许 , 或 . 作为小数点
+      v = v.replace(/\s+/g,'').replace(/,/g,'.');
+
+      // 只保留一个小数点
+      const i = v.indexOf(".");
+      if (i !== -1){
+        v = v.slice(0, i+1) + v.slice(i+1).replace(/\./g,"");
+      }
+
+      const n = Number(v);
+      return Number.isFinite(n) ? n : NaN;
+    }
+
+    function filterDecimal(input){
+      input.addEventListener("input", () => {
+        let v = input.value;
+        v = v.replace(/[\u200B-\u200D\uFEFF]/g, "");
+        v = v.replace(/[^0-9.,]/g, "");
+        const i = v.search(/[.,]/);
+        if (i !== -1){
+          const head = v.slice(0, i + 1);
+          const tail = v.slice(i + 1).replace(/[.,]/g, "");
+          v = head + tail;
+        }
+        if (input.value !== v) input.value = v;
+      });
+    }
+
+    function filterInteger(input){
+      input.addEventListener("input", () => {
+        const v = input.value.replace(/[^\d]/g, "");
+        if (input.value !== v) input.value = v;
+      });
+    }
+
+    function bindUppercase(input){
+      input.addEventListener("input", () => {
+        const pos = input.selectionStart;
+        const up = input.value.toUpperCase();
+        if (input.value !== up){
+          input.value = up;
+          try{ input.setSelectionRange(pos, pos); }catch{}
+        }
+      });
+    }
+
+    function renderDesktopTable(el, normalPct){
+      el.innerHTML = "";
+      for (const L of LEV_LIST){
+        const k = document.createElement("div");
+        k.className = "k";
+        k.textContent = L;
+
+        const v = document.createElement("div");
+        v.className = "v";
+        v.textContent = Number.isFinite(normalPct) ? (formatNumber(normalPct * L, 2) + "%") : "—";
+
+        el.appendChild(k);
+        el.appendChild(v);
+      }
+    }
+
+    function calcPanel(isLong){
+      const entryEl = document.getElementById(isLong ? "long_entry" : "short_entry");
+      const levEl   = document.getElementById(isLong ? "long_lev" : "short_lev");
+      const profEl  = document.getElementById(isLong ? "long_profit" : "short_profit");
+
+      const entry = parseNum(entryEl.value);
+      const lev   = parseNum(levEl.value);
+      const profitPct = parseNum(profEl.value);
+
+      // 正常利润 = 利润% / 杠杆
+      const norm = (Number.isFinite(profitPct) && Number.isFinite(lev) && lev !== 0) ? (profitPct / lev) : NaN;
+
+      const digits = isLong ? DIGITS_LONG : DIGITS_SHORT;
+
+      // 桌面输出
+      const normOut = document.getElementById(isLong ? "long_norm" : "short_norm");
+      const tpOut   = document.getElementById(isLong ? "long_tp" : "short_tp");
+
+      normOut.textContent = Number.isFinite(norm) ? (formatNumber(norm, 2) + "%") : "—";
+
+      let tpBase = NaN;
+      if (Number.isFinite(entry) && Number.isFinite(norm)){
+        tpBase = isLong ? entry * (1 + norm/100) : entry * (1 - norm/100);
+        tpOut.textContent = formatNumber(tpBase, digits);
+      } else {
+        tpOut.textContent = "—";
+      }
+
+      // ✅ 手机输出（不管是不是手机，都更新）
+      const tpMobile = document.getElementById(isLong ? "long_tp_mobile" : "short_tp_mobile");
+      if (tpMobile){
+        tpMobile.textContent = Number.isFinite(tpBase) ? formatNumber(tpBase, digits) : "—";
+      }
+
+      // 桌面表格（手机隐藏）
+      const table = document.getElementById(isLong ? "long_table" : "short_table");
+      renderDesktopTable(table, norm);
+    }
+
+    function recalcAll(){
+      calcPanel(true);
+      calcPanel(false);
+    }
+
+    // digits：左右独立
+    const selL = document.getElementById("digits_long");
+    const selS = document.getElementById("digits_short");
+    selL.addEventListener("change", () => {
+      const n = Number(selL.value);
+      DIGITS_LONG = Number.isFinite(n) ? Math.min(7, Math.max(2, n)) : 3;
+      calcPanel(true);
+    });
+    selS.addEventListener("change", () => {
+      const n = Number(selS.value);
+      DIGITS_SHORT = Number.isFinite(n) ? Math.min(7, Math.max(2, n)) : 3;
+      calcPanel(false);
+    });
+
+    // ✅ iOS/某些预览器 input 事件不稳定：多绑几个事件
+    function bindRecalc(el){
+      ["input","change","keyup","blur"].forEach(ev=>{
+        el.addEventListener(ev, recalcAll);
+      });
+    }
+
+    ["long_entry","long_profit","short_entry","short_profit"].forEach(id=>{
+      const el = document.getElementById(id);
+      filterDecimal(el);
+      bindRecalc(el);
+    });
+    ["long_lev","short_lev"].forEach(id=>{
+      const el = document.getElementById(id);
+      filterInteger(el);
+      bindRecalc(el);
+    });
+
+    bindUppercase(document.getElementById("long_code"));
+    bindUppercase(document.getElementById("short_code"));
+
+    DIGITS_LONG = Number(selL.value) || 3;
+    DIGITS_SHORT = Number(selS.value) || 3;
+
+    // ✅ 某些手机打开本地 html 不会触发 DOMContentLoaded 的时机问题：再延迟算一次
+    window.addEventListener("load", () => {
+      recalcAll();
+      setTimeout(recalcAll, 50);
+      setTimeout(recalcAll, 250);
+    });
+  </script>
+</body>
+</html>
