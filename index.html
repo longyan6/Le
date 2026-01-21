@@ -11,12 +11,10 @@
       --wm-right: 10px;
       --wm-bottom: 8px;
 
-      /* TP 输入三格列宽（买入价/杠杆/利润） */
       --tp-col-entry: 1.20fr;
       --tp-col-lev:   0.80fr;
       --tp-col-profit:1.20fr;
 
-      /* Profit 输入四格列宽（保证金/杠杆/开仓均价/目标价） */
       --p-col-m: 1.05fr;
       --p-col-l: 0.75fr;
       --p-col-e: 1.05fr;
@@ -40,7 +38,6 @@
       background:#fff;
     }
 
-    /* 顶部工具栏 */
     .toolbar{
       display:flex;
       align-items:center;
@@ -161,7 +158,6 @@
 
     .bar{ height: 14px; width: 100%; margin: 8px 0 10px; }
 
-    /* 水印：同一位置可点击（隐藏后仍可点3次恢复） */
     .wmHit{
       position:absolute;
       right: var(--wm-right);
@@ -181,9 +177,7 @@
       text-shadow: 0 0 1px rgba(0,0,0,0.35);
       transition: opacity .15s ease;
     }
-    .wmHidden .watermark{
-      opacity: 0;
-    }
+    .wmHidden .watermark{ opacity: 0; }
 
     /* ===================== TP（止盈价） ===================== */
     .digitsRow{
@@ -241,7 +235,6 @@
     .triple .cell:not(:first-child){
       border-left: 1px solid rgba(0,0,0,0.22);
     }
-
     .triple input{
       width: 100%;
       height: 100%;
@@ -257,7 +250,6 @@
       transform: translateZ(0);
       backface-visibility: hidden;
     }
-
     .triple input.caret-fix-on:focus{ text-align:left; padding-left: 18px; }
     .triple input.caret-fix-on:not(:focus){ text-align:center; }
 
@@ -294,10 +286,30 @@
     .k{ text-align:center; }
     .v{ text-align:center; }
 
-    /* 手机：止盈价一行（左标题 右数值） */
     .mobileTPRow{ display:none; }
 
     /* ===================== Profit（利润） ===================== */
+    /* ✅ 你要的：利润小数位（放到红框位置：输入框下面那条） */
+    .profitDigitsRow{
+      display:flex;
+      justify-content:flex-start; /* 红框位置通常靠左更自然 */
+      align-items:center;
+      gap: 12px;
+      margin: 2px 0 1px;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+      font-size: 12px;
+      color: rgba(0,0,0,.65);
+    }
+    .profitDigitsRow select{
+      height: 28px;
+      border: 1px solid rgba(0,0,0,.35);
+      background:#f7f7f7;
+      border-radius: 8px;
+      padding: 0 8px;
+      outline: none;
+      font-size: 12px;
+    }
+
     .pHeadRow{
       display:grid;
       grid-template-columns: var(--p-col-m) var(--p-col-l) var(--p-col-e) var(--p-col-t);
@@ -311,7 +323,7 @@
     .pInputRow{
       display:grid;
       grid-template-columns: 1fr;
-      row-gap: 14px;
+      row-gap: 1px;
       align-items:center;
     }
 
@@ -333,7 +345,6 @@
       border-left: 1px solid rgba(0,0,0,0.22);
     }
     .quad .cell:first-child{ border-left: 0; }
-
     .quad input{
       width: 100%;
       height: 100%;
@@ -353,7 +364,7 @@
     .quad input.caret-fix-on:not(:focus){ text-align:center; }
 
     .profitRow{
-      margin-top: 18px;
+      margin-top: 0px;
       display:grid;
       grid-template-columns: 1fr;
       gap: 12px;
@@ -387,16 +398,13 @@
       font-size: 30px;
     }
 
-    /* ✅✅ 修复 BUG：手机利润行默认隐藏（桌面不显示） */
     .mobileProfitRow{ display:none; }
 
-    /* 页面切换 */
     .hidden{ display:none !important; }
 
     /* ===================== 手机端 ===================== */
     @media (max-width: 980px){
       .page{ width:100%; margin:0; }
-
       .toolbar{ padding: 12px 14px 6px; justify-content:flex-start; }
       .tabBtn{ height: 40px; font-size: 16px; border-radius: 10px; }
       .langSelect{ height: 40px; font-size: 16px; }
@@ -407,15 +415,13 @@
         padding: 14px 14px 22px;
       }
       .panel{ padding: 14px 14px 18px; min-height:auto; }
-
       .tag{ width: 92px; height: 40px; font-size: 22px; }
       .codeBox{ width:auto; gap: 10px; font-size: 18px; justify-content:flex-start; }
       .codeInput{ width: 160px; height: 40px; font-size: 18px; }
       .unitSelect{ height: 40px; font-size: 16px; }
-
       .bar{ height: 12px; margin: 8px 0 10px; }
 
-      /* TP：表头改3列，隐藏桌面输出两列与列表 */
+      /* TP */
       .tpHeadRow{
         grid-template-columns: 1fr 0.85fr 1fr;
         column-gap: 16px;
@@ -423,7 +429,6 @@
         margin-bottom: 8px;
       }
       .tpHeadRow .deskOnly{ display:none; }
-
       .tpInputRow{
         grid-template-columns: 1fr;
         row-gap: 12px;
@@ -454,17 +459,24 @@
       }
       .tpTable{ display:none; }
 
-      /* Profit：隐藏表格，手机只显示利润行 */
+      /* Profit */
       .profitRow{ display:none; }
       .pTable{ display:none; }
 
-      /* ✅ 手机利润行在手机端显示 */
+      /* ✅ 手机端也要利润小数位：显示出来，并做成和 TP 类似的行 */
+      .profitDigitsRow{
+        justify-content:flex-start;
+        margin: 10px 0 6px;
+      }
+      .profitDigitsRow span{ font-size: 12px; }
+      .profitDigitsRow select{ height: 28px; font-size: 12px; }
+
       .mobileProfitRow{
         display:grid;
         grid-template-columns: auto 1fr;
         align-items:end;
         column-gap: 18px;
-        margin-top: 12px;
+        margin-top: 0px;
       }
       .mobileProfitTitle{
         font-size: 44px;
@@ -486,7 +498,6 @@
 <body>
   <div class="page">
 
-    <!-- 顶部：页面切换 + 语言选择 -->
     <div class="toolbar">
       <div class="tabs">
         <button class="tabBtn active" id="btn_tp">止盈价</button>
@@ -502,11 +513,10 @@
       </div>
     </div>
 
-    <!-- ===================== 页面A：止盈价 ===================== -->
+    <!-- ===================== 止盈价 ===================== -->
     <div id="page_tp">
       <div class="row">
 
-        <!-- 多单 -->
         <section class="panel" id="tp_long_panel">
           <div class="top">
             <div class="tag" id="tag_long_tp">多单</div>
@@ -559,12 +569,9 @@
           </div>
 
           <div class="tpTable" id="long_table"></div>
-
-          <!-- 水印点击区域（3连点切换显示） -->
           <div class="wmHit" data-wm="tp_long"><div class="watermark">Lee奇</div></div>
         </section>
 
-        <!-- 空单 -->
         <section class="panel" id="tp_short_panel">
           <div class="top">
             <div class="tag" id="tag_short_tp">空单</div>
@@ -617,18 +624,16 @@
           </div>
 
           <div class="tpTable" id="short_table"></div>
-
           <div class="wmHit" data-wm="tp_short"><div class="watermark">Lee奇</div></div>
         </section>
 
       </div>
     </div>
 
-    <!-- ===================== 页面B：利润 ===================== -->
+    <!-- ===================== 利润 ===================== -->
     <div id="page_profit" class="hidden">
       <div class="row">
 
-        <!-- 多单利润 -->
         <section class="panel" id="p_long_panel">
           <div class="top">
             <div class="tag" id="tag_long_p">多单</div>
@@ -663,6 +668,19 @@
               <div class="cell"><input id="p_long_target" value="" autocomplete="off" inputmode="decimal"></div>
             </div>
 
+            <!-- ✅ 放到你红框位置：输入框下面 -->
+            <div class="profitDigitsRow">
+              <span id="lbl_profit_digits_long">利润小数位：</span>
+              <select id="profit_digits_long">
+                <option value="2">2</option>
+                <option value="3" selected>3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+                <option value="7">7</option>
+              </select>
+            </div>
+
             <div class="profitRow">
               <div class="profitBox">
                 <div class="profitTitle" id="lbl_profit_long">利润</div>
@@ -677,11 +695,9 @@
           </div>
 
           <div class="pTable" id="p_long_table"></div>
-
           <div class="wmHit" data-wm="p_long"><div class="watermark">Lee奇</div></div>
         </section>
 
-        <!-- 空单利润 -->
         <section class="panel" id="p_short_panel">
           <div class="top">
             <div class="tag" id="tag_short_p">空单</div>
@@ -716,6 +732,19 @@
               <div class="cell"><input id="p_short_target" value="" autocomplete="off" inputmode="decimal"></div>
             </div>
 
+            <!-- ✅ 红框位置：输入框下面 -->
+            <div class="profitDigitsRow">
+              <span id="lbl_profit_digits_short">利润小数位：</span>
+              <select id="profit_digits_short">
+                <option value="2">2</option>
+                <option value="3" selected>3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+                <option value="7">7</option>
+              </select>
+            </div>
+
             <div class="profitRow">
               <div class="profitBox">
                 <div class="profitTitle" id="lbl_profit_short">利润</div>
@@ -730,7 +759,6 @@
           </div>
 
           <div class="pTable" id="p_short_table"></div>
-
           <div class="wmHit" data-wm="p_short"><div class="watermark">Lee奇</div></div>
         </section>
 
@@ -740,7 +768,6 @@
   </div>
 
   <script>
-    // ================== 公共工具 ==================
     const LEV_LIST = [1, 5, 10, 20, 50, 100];
 
     const DECIMAL_SEP = (() => {
@@ -815,7 +842,7 @@
       });
     }
 
-    // ================== 页面切换 ==================
+    // 页面切换
     const btnTP = document.getElementById("btn_tp");
     const btnProfit = document.getElementById("btn_profit");
     const pageTP = document.getElementById("page_tp");
@@ -830,20 +857,17 @@
       scheduleRecalc();
       setTimeout(scheduleRecalc, 50);
     }
-
     btnTP.addEventListener("click", () => setActiveTab("tp"));
     btnProfit.addEventListener("click", () => setActiveTab("profit"));
 
-    // ================== 水印：三连点切换（隐藏/显示） ==================
+    // 水印三连点
     function attachWatermarkToggle(hitEl){
       let clicks = 0;
       let timer = 0;
-
       hitEl.addEventListener("click", () => {
         clicks++;
         if (timer) clearTimeout(timer);
         timer = setTimeout(() => { clicks = 0; timer = 0; }, 650);
-
         if (clicks >= 3){
           clicks = 0;
           if (timer) clearTimeout(timer);
@@ -853,27 +877,25 @@
         }
       }, { passive: true });
     }
-
     document.querySelectorAll(".wmHit").forEach(attachWatermarkToggle);
 
-    // ================== 语言切换（全局） ==================
+    // 语言
     const I18N = {
       zh: {
         tabs_tp: "止盈价",
         tabs_profit: "利润",
         lang: "语言：",
-
         long: "多单",
         short: "空单",
         code: "代码：",
         digits: "止盈价小数位：",
+        profitDigits: "利润小数位：",
         long_entry: "多单买入价",
         short_entry: "空单买入价",
         lev: "杠杆/倍",
         profit_pct: "利润%",
         norm: "正常利润",
         tp: "止盈价",
-
         unit: "单位：",
         blank: "留空",
         margin: "保证金",
@@ -886,18 +908,17 @@
         tabs_tp: "Take Profit",
         tabs_profit: "Profit",
         lang: "Language:",
-
         long: "Long",
         short: "Short",
         code: "Symbol:",
         digits: "TP decimals:",
+        profitDigits: "Profit decimals:",
         long_entry: "Long entry",
         short_entry: "Short entry",
         lev: "Leverage",
         profit_pct: "Profit %",
         norm: "Normal",
         tp: "Take Profit",
-
         unit: "Unit:",
         blank: "Blank",
         margin: "Margin",
@@ -910,18 +931,17 @@
         tabs_tp: "Take-Profit",
         tabs_profit: "Gewinn",
         lang: "Sprache:",
-
         long: "Long",
         short: "Short",
         code: "Symbol:",
         digits: "TP Dezimalstellen:",
+        profitDigits: "Gewinn Dezimalstellen:",
         long_entry: "Long Einstieg",
         short_entry: "Short Einstieg",
         lev: "Hebel",
         profit_pct: "Profit %",
         norm: "Normal",
         tp: "Take-Profit",
-
         unit: "Einheit:",
         blank: "Leer",
         margin: "Marge",
@@ -983,9 +1003,12 @@
       document.getElementById("lbl_profit_short").textContent = t.profit;
       document.getElementById("lbl_profit_long_m").textContent = t.profit;
       document.getElementById("lbl_profit_short_m").textContent = t.profit;
+
+      document.getElementById("lbl_profit_digits_long").textContent = t.profitDigits;
+      document.getElementById("lbl_profit_digits_short").textContent = t.profitDigits;
     }
 
-    // ================== TP 计算 ==================
+    // TP 计算
     let DIGITS_LONG = 3;
     let DIGITS_SHORT = 3;
 
@@ -1039,7 +1062,7 @@
       renderTPTable(table, norm);
     }
 
-    // ================== Profit 计算 ==================
+    // Profit 计算
     function initProfitTable(tableEl){
       tableEl.innerHTML = "";
       const valueCells = [];
@@ -1061,7 +1084,7 @@
     const pLongCells  = initProfitTable(document.getElementById("p_long_table"));
     const pShortCells = initProfitTable(document.getElementById("p_short_table"));
 
-    function updateProfitTable(valueCells, margin, deltaPct, isLong){
+    function updateProfitTable(valueCells, margin, deltaPct, isLong, digits){
       for (let i=0;i<LEV_LIST.length;i++){
         const L = LEV_LIST[i];
         let p = NaN;
@@ -1069,8 +1092,16 @@
           const eff = isLong ? deltaPct : (-deltaPct);
           p = margin * L * eff;
         }
-        valueCells[i].textContent = Number.isFinite(p) ? formatNumber(p, 2) : "—";
+        valueCells[i].textContent = Number.isFinite(p) ? formatNumber(p, digits) : "—";
       }
+    }
+
+    function getProfitDigits(isLong){
+      const sel = document.getElementById(isLong ? "profit_digits_long" : "profit_digits_short");
+      let digits = Number(sel?.value);
+      if (!Number.isFinite(digits)) digits = 3;
+      digits = Math.min(7, Math.max(2, digits));
+      return digits;
     }
 
     function calcProfit(isLong){
@@ -1084,6 +1115,8 @@
       const unitSel = document.getElementById(id + "_unit");
       const unit = unitSel ? (unitSel.value || "") : "";
 
+      const digits = getProfitDigits(isLong);
+
       let deltaPct = NaN;
       if (Number.isFinite(entry) && entry !== 0 && Number.isFinite(target)){
         deltaPct = (target / entry) - 1;
@@ -1095,19 +1128,17 @@
         profit = margin * lev * eff;
       }
 
-      const raw = Number.isFinite(profit) ? formatNumber(profit, 2) : "—";
+      const raw = Number.isFinite(profit) ? formatNumber(profit, digits) : "—";
       const text = (raw === "—") ? "—" : (raw + (unit ? (" " + unit) : ""));
 
-      const outDesk = document.getElementById(id + "_profit_amt");
-      const outMob  = document.getElementById(id + "_profit_mobile");
-      outDesk.textContent = text;
-      if (outMob) outMob.textContent = text;
+      document.getElementById(id + "_profit_amt").textContent = text;
+      const mob = document.getElementById(id + "_profit_mobile");
+      if (mob) mob.textContent = text;
 
       const cells = isLong ? pLongCells : pShortCells;
-      updateProfitTable(cells, margin, deltaPct, isLong);
+      updateProfitTable(cells, margin, deltaPct, isLong, digits);
     }
 
-    // ================== 总重算（两套都算，切页不丢值） ==================
     function recalcAll(){
       calcTP(true);
       calcTP(false);
@@ -1115,7 +1146,6 @@
       calcProfit(false);
     }
 
-    // iOS/预览器：节流 + 多事件
     let rafId = 0;
     function scheduleRecalc(){
       if (rafId) return;
@@ -1134,7 +1164,7 @@
       });
     }
 
-    // ================== 绑定：TP ==================
+    // 绑定：TP
     const selL = document.getElementById("digits_long");
     const selS = document.getElementById("digits_short");
 
@@ -1163,7 +1193,7 @@
     bindUppercase(document.getElementById("long_code"));
     bindUppercase(document.getElementById("short_code"));
 
-    // ================== 绑定：Profit ==================
+    // 绑定：Profit
     ["long_margin","p_long_entry","p_long_target","short_margin","p_short_entry","p_short_target"].forEach(id=>{
       const el = document.getElementById(id);
       filterDecimal(el);
@@ -1174,25 +1204,27 @@
       filterInteger(el);
       bindRecalc(el);
     });
+
     document.getElementById("long_unit").addEventListener("change", scheduleRecalc);
     document.getElementById("short_unit").addEventListener("change", scheduleRecalc);
+
+    document.getElementById("profit_digits_long").addEventListener("change", scheduleRecalc);
+    document.getElementById("profit_digits_short").addEventListener("change", scheduleRecalc);
 
     bindUppercase(document.getElementById("p_long_code"));
     bindUppercase(document.getElementById("p_short_code"));
 
-    // ================== 语言选择 ==================
+    // 语言选择
     const langSel = document.getElementById("lang");
     langSel.addEventListener("change", () => {
       applyLang(langSel.value);
       scheduleRecalc();
     });
 
-    // 初始
-    DIGITS_LONG = Number(selL.value) || 3;
-    DIGITS_SHORT = Number(selS.value) || 3;
-
     window.addEventListener("load", () => {
       applyLang(langSel.value || "zh");
+      DIGITS_LONG = Number(selL.value) || 3;
+      DIGITS_SHORT = Number(selS.value) || 3;
       recalcAll();
       setTimeout(recalcAll, 50);
       setTimeout(recalcAll, 250);
