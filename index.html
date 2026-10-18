@@ -770,18 +770,32 @@
   <script>
     const LEV_LIST = [1, 5, 10, 20, 50, 100];
 
-    const DECIMAL_SEP = (() => {
-      try{
-        const s = new Intl.NumberFormat().format(1.1);
-        const m = s.match(/1([^0-9])1/);
-        return m ? m[1] : ".";
-      } catch { return "."; }
-    })();
+    function currentNumberLang(){
+      return document.getElementById("lang")?.value || "zh";
+    }
 
-    function formatNumber(n, digits){
+    function numberSymbols(lang = currentNumberLang()){
+      return lang === "de"
+        ? { decimal: ",", group: "." }
+        : { decimal: ".", group: "," };
+    }
+
+    function formatNumber(n, digits, lang = currentNumberLang()){
       if (!Number.isFinite(n)) return "—";
-      const s = n.toFixed(digits);
-      return (DECIMAL_SEP === ".") ? s : s.replace(".", DECIMAL_SEP);
+      const locale = lang === "de" ? "de-DE" : "en-US";
+      const useGrouping = lang !== "zh";
+      try{
+        return new Intl.NumberFormat(locale, {
+          useGrouping,
+          minimumFractionDigits: digits,
+          maximumFractionDigits: digits
+        }).format(n);
+      } catch {
+        const fixed = n.toFixed(digits);
+        const [integer, fraction] = fixed.split(".");
+        const grouped = useGrouping ? integer.replace(/\B(?=(\d{3})+(?!\d))/g, lang === "de" ? "." : ",") : integer;
+        return digits ? grouped + (lang === "de" ? "," : ".") + fraction : grouped;
+      }
     }
 
     function normalizeNumberText(v){
@@ -792,20 +806,61 @@
       return v;
     }
 
-    function parseNum(v){
+    function parseNumWithLang(v, lang = currentNumberLang()){
       v = normalizeNumberText(v);
-      v = String(v ?? "");
-      v = v.replace(/[\u200B-\u200D\uFEFF]/g, "");
-      v = v.trim();
+      v = v.replace(/[\u200B-\u200D\uFEFF\s]/g, "").trim();
       if (!v) return NaN;
-
-      v = v.replace(/\s+/g,'').replace(/,/g,'.');
-      const i = v.indexOf(".");
-      if (i !== -1){
-        v = v.slice(0, i+1) + v.slice(i+1).replace(/\./g,"");
-      }
-      const n = Number(v);
+      const { decimal, group } = numberSymbols(lang);
+      const valid = lang === "de"
+        ? /^-?(?:(?:\d+|\d{1,3}(?:\.\d{3})+)(?:,\d*)?|,\d+)$/
+        : /^-?(?:(?:\d+|\d{1,3}(?:,\d{3})+)(?:\.\d*)?|\.\d+)$/;
+      if (!valid.test(v)) return NaN;
+      const normalized = v.split(group).join("").replace(decimal, ".");
+      const n = Number(normalized);
       return Number.isFinite(n) ? n : NaN;
+    }
+
+    function parseNum(v){
+      return parseNumWithLang(v);
+    }
+
+    function inputErrorText(lang = currentNumberLang()){
+      if (lang === "de") return "Zahlenformat: 1.234,56 oder 1234,56";
+      if (lang === "en") return "Number format: 1,234.56 or 1234.56";
+      return "数字格式：1,234.56 或 1234.56";
+    }
+
+    function updateDecimalValidity(input){
+      const value = input.value.trim();
+      const valid = !value || Number.isFinite(parseNum(value));
+      input.setAttribute("aria-invalid", valid ? "false" : "true");
+      input.title = valid ? "" : inputErrorText();
+    }
+
+    function decimalPlacesIn(value, lang){
+      const decimal = numberSymbols(lang).decimal;
+      const index = value.lastIndexOf(decimal);
+      return index === -1 ? 0 : value.slice(index + 1).replace(/\D/g, "").length;
+    }
+
+    function formatInputNumber(n, digits, lang){
+      const locale = lang === "de" ? "de-DE" : "en-US";
+      return new Intl.NumberFormat(locale, {
+        useGrouping: lang !== "zh",
+        minimumFractionDigits: digits,
+        maximumFractionDigits: digits
+      }).format(n);
+    }
+
+    function convertDecimalInputs(fromLang, toLang){
+      document.querySelectorAll('input[inputmode="decimal"]').forEach(input => {
+        const raw = input.value.trim();
+        if (!raw) return;
+        const number = parseNumWithLang(raw, fromLang);
+        if (!Number.isFinite(number)) return;
+        input.value = formatInputNumber(number, decimalPlacesIn(raw, fromLang), toLang);
+        updateDecimalValidity(input);
+      });
     }
 
     function filterDecimal(input){
@@ -813,13 +868,8 @@
         let v = normalizeNumberText(input.value);
         v = v.replace(/[\u200B-\u200D\uFEFF]/g, "");
         v = v.replace(/[^0-9.,]/g, "");
-        const i = v.search(/[.,]/);
-        if (i !== -1){
-          const head = v.slice(0, i + 1);
-          const tail = v.slice(i + 1).replace(/[.,]/g, "");
-          v = head + tail;
-        }
         if (input.value !== v) input.value = v;
+        updateDecimalValidity(input);
       });
     }
 
@@ -1216,7 +1266,10 @@
 
     // 语言选择
     const langSel = document.getElementById("lang");
+    let activeNumberLang = langSel.value || "zh";
     langSel.addEventListener("change", () => {
+      convertDecimalInputs(activeNumberLang, langSel.value);
+      activeNumberLang = langSel.value;
       applyLang(langSel.value);
       scheduleRecalc();
     });
